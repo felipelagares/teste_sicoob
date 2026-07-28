@@ -1,41 +1,85 @@
-# Books Scraper RPA
+# Sicoob Book Scraper
 
-Projeto desenvolvido em Python para automatizar a coleta de dados do site **Books to Scrape**, realizar o download das capas dos livros, armazenar as imagens no Google Drive e registrar os dados em uma planilha do Google Sheets.
+## Descrição
 
-## Tecnologias utilizadas
+O **Sicoob Book Scraper** é um projeto de automação desenvolvido em **Python** para realizar a coleta de dados do catálogo do site **Books to Scrape**.
+
+O robô navega pelas páginas do catálogo, extrai informações dos livros, faz o download das imagens das capas, realiza o upload das imagens para o **Google Drive** e registra os dados em uma **planilha do Google Sheets**.
+
+---
+
+# Tecnologias utilizadas
 
 * Python 3.10+
 * Selenium
+* WebDriver Manager
+* Requests
 * Google Drive API
 * Google Sheets API
-* Google Service Account
+* OAuth 2.0
 * Logging
 
 ---
 
-# Instalação
+# Estrutura do projeto
+
+```text
+teste_sicoob/
+│
+├── config/
+│   ├── client_secret.json
+│   ├── token.json
+│   └── token_sheets.json
+│
+├── google_api/
+│   ├── drive.py
+│   └── sheets.py
+│
+├── images/
+│
+├── logs/
+│   ├── execution.log
+│   └── logger.py
+│
+├── scrapping/
+│   ├── image_downloader.py
+│   └── scrapper.py
+│
+├── main.py
+├── requirements.txt
+└── README.md
+```
+
+---
+
+# Como instalar
 
 Clone o repositório:
 
 ```bash
-git clone <URL_DO_REPOSITORIO>
-cd books-scraper
+git clone <url-do-repositorio>
+```
+
+Acesse a pasta:
+
+```bash
+cd teste_sicoob
 ```
 
 Crie um ambiente virtual:
 
-### Windows
+Windows
 
 ```bash
-python -m venv .venv
-.venv\Scripts\activate
+python -m venv venv
 ```
 
-### Linux / macOS
+Ative o ambiente virtual:
+
+Windows (PowerShell)
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
+venv\Scripts\activate
 ```
 
 Instale as dependências:
@@ -46,134 +90,7 @@ pip install -r requirements.txt
 
 ---
 
-# Configurando a autenticação do Google Drive e Google Sheets
-
-O projeto utiliza **Service Account** para acessar as APIs do Google.
-
-## 1. Criar um projeto no Google Cloud
-
-Acesse:
-
-https://console.cloud.google.com/
-
-Crie um novo projeto.
-
----
-
-## 2. Habilitar as APIs
-
-No menu lateral:
-
-**APIs e Serviços → Biblioteca**
-
-Habilite as seguintes APIs:
-
-* Google Drive API
-* Google Sheets API
-
----
-
-## 3. Criar uma Conta de Serviço
-
-Acesse:
-
-**APIs e Serviços → Credenciais**
-
-Clique em:
-
-**Criar credenciais → Conta de serviço**
-
-Informe um nome para a conta de serviço, por exemplo:
-
-```
-books-scraper
-```
-
-Conclua a criação.
-
----
-
-## 4. Gerar a chave JSON
-
-Abra a conta de serviço criada.
-
-Acesse a aba **Chaves**.
-
-Clique em:
-
-```
-Adicionar chave
-```
-
-Depois:
-
-```
-Criar nova chave
-```
-
-Selecione:
-
-```
-JSON
-```
-
-Clique em **Criar**.
-
-O navegador fará o download do arquivo JSON.
-
-Renomeie o arquivo para:
-
-```
-credentials.json
-```
-
-Crie a pasta `config` no projeto (caso não exista) e mova o arquivo para:
-
-```
-project/
-│
-├── config/
-│   └── credentials.json
-```
-
----
-
-## 5. Compartilhar recursos com a Conta de Serviço
-
-A conta de serviço possui um e-mail semelhante a:
-
-```
-books-scraper@meu-projeto.iam.gserviceaccount.com
-```
-
-Caso utilize uma planilha ou pasta já existente, compartilhe esses recursos com esse e-mail concedendo permissão de **Editor**.
-
----
-
-# Estrutura do projeto
-
-```
-project/
-│
-├── config/
-│   └── credentials.json
-│
-├── images/
-│
-├── logs/
-│   └── execution.log
-│
-├── downloader.py
-├── drive.py
-├── logger.py
-├── main.py
-├── requirements.txt
-└── README.md
-```
-
----
-
-# Executando o projeto
+# Como executar
 
 Execute:
 
@@ -181,35 +98,144 @@ Execute:
 python main.py
 ```
 
-Durante a execução o robô irá:
+Durante a primeira execução será aberta uma janela do navegador solicitando autorização da conta Google.
 
-* Navegar pelas páginas do catálogo.
-* Extrair as informações dos livros.
-* Baixar as imagens das capas.
-* Criar uma pasta no Google Drive.
-* Fazer upload das imagens.
-* Registrar os dados na planilha do Google Sheets.
-* Salvar os logs em:
+Após a autorização serão criados automaticamente os arquivos:
 
+```text
+config/token.json
+config/token_sheets.json
 ```
+
+Nas próximas execuções não será necessário realizar uma nova autenticação.
+
+---
+
+# Configuração das credenciais do Google
+
+Este projeto utiliza **OAuth 2.0** para autenticação nas APIs do Google Drive e Google Sheets.
+
+## 1. Criar um projeto
+
+Acesse o Google Cloud Console:
+
+https://console.cloud.google.com/
+
+Crie um novo projeto.
+
+---
+
+## 2. Ativar as APIs
+
+No projeto criado, habilite:
+
+* Google Drive API
+* Google Sheets API
+
+---
+
+## 3. Configurar a Tela de Consentimento OAuth
+
+Em **APIs e Serviços → Tela de consentimento OAuth**:
+
+* Tipo de usuário: Externo
+* Preencha os campos obrigatórios
+* Adicione sua conta Google em **Usuários de teste**
+
+---
+
+## 4. Criar as credenciais OAuth
+
+Em **APIs e Serviços → Credenciais**:
+
+* Criar credenciais
+* ID do cliente OAuth
+* Tipo: Aplicativo para computador (Desktop App)
+
+Faça o download do arquivo JSON.
+
+Renomeie o arquivo para:
+
+```text
+client_secret.json
+```
+
+Coloque-o na pasta:
+
+```text
+config/
+```
+
+**Importante:** o arquivo `client_secret.json` contém informações sensíveis e **não deve ser enviado ao repositório Git**.
+
+Recomenda-se adicionar ao arquivo `.gitignore`:
+
+```text
+config/client_secret.json
+config/token.json
+config/token_sheets.json
+```
+
+---
+
+# Funcionamento do robô
+
+O fluxo da automação é:
+
+1. Acessa o site Books to Scrape.
+2. Percorre as três primeiras páginas do catálogo.
+3. Extrai:
+
+   * título;
+   * preço;
+   * avaliação (rating);
+   * disponibilidade;
+   * URL da imagem.
+4. Faz o download da imagem da capa.
+5. Envia a imagem para uma pasta no Google Drive.
+6. Cria uma planilha no Google Sheets.
+7. Registra os dados dos livros e o link da imagem na planilha.
+8. Registra toda a execução no arquivo `logs/execution.log`.
+
+---
+
+# Logs
+
+Os logs da aplicação são gravados em:
+
+```text
 logs/execution.log
 ```
 
----
+São registrados:
 
-# Dependências
-
-Instale todas as dependências utilizando:
-
-```bash
-pip install -r requirements.txt
-```
+* início e fim da execução;
+* processamento de páginas;
+* upload das imagens;
+* criação da planilha;
+* exceções e falhas durante a execução.
 
 ---
 
-# Observações
+# Decisões técnicas
 
-* O arquivo `credentials.json` não deve ser versionado no Git.
-* Adicione `config/credentials.json` ao arquivo `.gitignore`.
-* O diretório `logs/` será criado automaticamente durante a execução.
-* O diretório `images/` armazenará temporariamente as capas dos livros baixadas antes do envio ao Google Drive.
+Durante o desenvolvimento foram tomadas as seguintes decisões:
+
+* Utilização do Selenium para navegação por apresentar uma implementação simples e adequada ao desafio.
+* Separação da aplicação em módulos (`scrapping`, `google_api` e `logs`) para melhorar a organização e facilitar a manutenção.
+* Utilização do módulo `logging` para registrar a execução e possíveis erros.
+* Utilização do `webdriver-manager` para eliminar a necessidade de instalação manual do ChromeDriver.
+* Utilização do OAuth 2.0 para autenticação no Google Drive e Google Sheets, permitindo integração com contas Google pessoais.
+
+---
+
+# Possíveis melhorias
+
+Caso houvesse mais tempo disponível, seriam implementadas as seguintes melhorias:
+
+* Configuração por meio de variáveis de ambiente (.env).
+* Testes unitários para os módulos de scraping e integração.
+* Tratamento mais detalhado de exceções e política de retentativas para falhas temporárias.
+* Execução paralela do download e upload das imagens para melhorar desempenho.
+* Parametrização da quantidade de páginas a serem processadas.
+* Geração automática de relatórios ao término da execução.
