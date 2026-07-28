@@ -1,60 +1,133 @@
 from datetime import datetime
 import os
 import time
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
 from scrapping.image_downloader import download_image
-from google_api.drive import upload_image
-from logs.logger import default_logger
 from scrapping.scrapper import page_scraper
+
+from google_api.drive import create_folder, upload_image
 from google_api.sheets import create_sheet, insert_books
 
+from logs.logger import default_logger
+
+
 def main():
+
     os.makedirs("images", exist_ok=True)
-    BASE_URL = "https://books.toscrape.com/catalogue/page-1.html"
-    service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=service)
+
+    driver = webdriver.Chrome(
+        service=Service(
+            ChromeDriverManager().install()
+        )
+    )
 
     folder_name = f"BooksScraper_{datetime.now():%Y%m%d_%H%M%S}"
 
-    default_logger.info(f"Pasta criada no Google Drive: {folder_name}")
+    books_data = []
 
     try:
-        books_data = []
-        driver.get(BASE_URL)
-        time.sleep(2)
-        for page in range(1, 3):
+
+        # Cria pasta no Drive
+        folder_id = create_folder(folder_name)
+
+        default_logger.info(
+            f"Pasta criada no Drive: {folder_name}"
+        )
+
+
+        for page in range(1, 4):
+
+            url = (
+                f"https://books.toscrape.com/"
+                f"catalogue/page-{page}.html"
+            )
+
+            default_logger.info(
+                f"Acessando página {page}"
+            )
+
+            driver.get(url)
+
+            time.sleep(2)
+
             books = page_scraper(driver)
+
+
+            for book in books:
+
+                try:
+
+                    # Baixa imagem
+                    image_path = download_image(
+                    book["cover"],
+                    book["name"]
+                    )
+
+
+                    # Upload Drive
+                    drive_link = upload_image(
+                    image_path,
+                    folder_id
+                    )
+
+                    default_logger.info(
+                        f"Upload concluído: {drive_link}"
+                    )
+
+
+                    book["cover"] = drive_link
+
+
+                    default_logger.info(
+                        f"Imagem enviada: {book['name']}"
+                    )
+
+
+                except Exception as e:
+
+                    default_logger.exception(
+                        f"Erro imagem {book['name']}: {e}"
+                    )
+
+
             books_data.extend(books)
 
-            #for book in books:
-            #    download_image(book["cover"], book["name"])
-            
-            #for image_file in os.listdir("images"):
-            #    image_path = os.path.join("images", image_file)
-            #    upload_image(image_path, '12j3Mked1OpYQihPs22pk6FwJSV1yog8F')
-            #    default_logger.info(f"Imagem enviada para o Google Drive: {image_file}")
-            try:
-                next_page =driver.find_element("xpath", '//*[@id="default"]/div/div/div/div/section/div[2]/div/ul/li[3]')
-                next_page.click()
-                time.sleep(2)
-            except:
-                default_logger.warning("Elemento 'next page' não encontrado.")
-                BASE_URL = f"https://books.toscrape.com/catalogue/page-{page+1}.html"
 
-        
-    finally:
+        # Criar planilha
         sheet_id = create_sheet(
-                "Books Scraper"
-                )
-        
+            "Books Scraper"
+        )
+
+
         insert_books(
-                sheet_id,
-                books_data
-                )
+            sheet_id,
+            books_data
+        )
+
+
+        default_logger.info(
+            "Planilha criada com sucesso"
+        )
+
+
+    except Exception as e:
+
+        default_logger.exception(
+            f"Erro na execução: {e}"
+        )
+
+
+    finally:
+
         driver.quit()
-        default_logger.info("Execução finalizada.")
+
+        default_logger.info(
+            "Execução finalizada."
+        )
 
 
 if __name__ == "__main__":
