@@ -10,7 +10,7 @@ O robô navega pelas páginas do catálogo, extrai informações dos livros, faz
 
 # Tecnologias utilizadas
 
-* Python 3.10+
+* Python 3.12.7
 * Selenium
 * WebDriver Manager
 * Requests
