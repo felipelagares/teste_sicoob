@@ -5,6 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 
+from image_downloader import download_image
+
 driver = webdriver.Chrome(
     service=Service(ChromeDriverManager().install())
 )
@@ -38,3 +40,5 @@ for index in range(1, 21):
         "xpath", book_xpath + availability_path).text
 
     default_logger.info(f"\nindex: {index}\n Book Name: {book_name}\n Book Price: {book_price}\n Book Rating: {book_rating}\n Book Availability: {book_availability}\n")
+
+    download_image(book_cover, book_name)
